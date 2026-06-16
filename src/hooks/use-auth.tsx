@@ -1,7 +1,7 @@
 import * as React from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, User, updateEmail, updateProfile as updateFirebaseProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export interface UserProfile {
   uid: string;
@@ -10,6 +10,7 @@ export interface UserProfile {
   phoneNumber: string;
   gender?: string;
   age?: string;
+  passportNumber?: string;
   role: "student" | "admin";
   currentLevel: string;
   attendance: number;
@@ -53,5 +54,34 @@ export function useAuth() {
     return () => unsubscribe();
   }, []);
 
-  return { user, profile, loading };
+  const updateUserProfile = async (data: Partial<UserProfile>) => {
+    if (!user || !profile) return;
+
+    try {
+      // Update Firestore first
+      const docRef = doc(db, "users", user.uid);
+      await updateDoc(docRef, data);
+
+      // Update local state
+      setProfile(prev => prev ? { ...prev, ...data } : null);
+
+      // Update Firebase Auth display name if changed
+      if (data.fullName && user.displayName !== data.fullName) {
+        await updateFirebaseProfile(user, { displayName: data.fullName });
+      }
+
+      // Update Firebase Auth email if changed
+      if (data.email && user.email !== data.email) {
+        // Note: For email update, user should re-authenticate in real app
+        await updateEmail(user, data.email);
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
+  };
+
+  return { user, profile, loading, updateUserProfile };
 }

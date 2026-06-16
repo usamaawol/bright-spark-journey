@@ -6,6 +6,9 @@ import { Footer } from "@/components/site/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   BookOpen, 
   MessageCircle, 
@@ -27,19 +30,65 @@ import {
   Bookmark,
   History,
   Award,
-  Bot
+  Bot,
+  Save,
+  Edit3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AITutor } from "@/components/AITutor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardComponent,
 });
 
 function DashboardComponent() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, updateUserProfile } = useAuth();
   const [activeTab, setActiveTab] = React.useState("overview");
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    gender: "",
+    passportNumber: ""
+  });
+
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        fullName: profile.fullName || "",
+        email: profile.email || "",
+        phoneNumber: profile.phoneNumber || "",
+        gender: profile.gender || "",
+        passportNumber: profile.passportNumber || ""
+      });
+    }
+  }, [profile]);
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateUserProfile(formData);
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (error) {
+      toast.error("Failed to update profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -348,31 +397,121 @@ function DashboardComponent() {
 
               <div className="md:col-span-2 space-y-8">
                 <Card className="border-none shadow-sm dark:bg-slate-800">
-                  <CardHeader className="border-b border-[color:var(--color-navy)]/5 dark:border-slate-700">
+                  <CardHeader className="border-b border-[color:var(--color-navy)]/5 dark:border-slate-700 flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2 font-black text-[color:var(--color-navy)] dark:text-white">
                       <UserInfoIcon className="size-5 text-[color:var(--color-spark)]" />
                       Personal Information
                     </CardTitle>
+                    {!isEditing && (
+                      <Button 
+                        onClick={handleEditToggle} 
+                        className="bg-[color:var(--color-navy)] hover:bg-[color:var(--color-spark)] text-white"
+                      >
+                        <Edit3 className="size-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    )}
                   </CardHeader>
                   <CardContent className="p-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Full Name</p>
-                        <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.fullName || "John Doe"}</p>
+                    {isEditing ? (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="fullName" className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Full Name</Label>
+                            <Input 
+                              id="fullName" 
+                              name="fullName" 
+                              value={formData.fullName} 
+                              onChange={handleInputChange} 
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="gender" className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Gender</Label>
+                            <Input 
+                              id="gender" 
+                              name="gender" 
+                              value={formData.gender} 
+                              onChange={handleInputChange} 
+                              className="w-full"
+                              placeholder="e.g. Male, Female, Other"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email" className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Email Address</Label>
+                            <Input 
+                              id="email" 
+                              name="email" 
+                              type="email" 
+                              value={formData.email} 
+                              onChange={handleInputChange} 
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phoneNumber" className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Phone Number</Label>
+                            <Input 
+                              id="phoneNumber" 
+                              name="phoneNumber" 
+                              value={formData.phoneNumber} 
+                              onChange={handleInputChange} 
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="space-y-2 sm:col-span-2">
+                            <Label htmlFor="passportNumber" className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Passport Number</Label>
+                            <Input 
+                              id="passportNumber" 
+                              name="passportNumber" 
+                              value={formData.passportNumber} 
+                              onChange={handleInputChange} 
+                              className="w-full"
+                              placeholder="e.g. A1234567"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 pt-2">
+                          <Button 
+                            onClick={handleSave} 
+                            disabled={isSaving} 
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <Save className="size-4 mr-2" />
+                            {isSaving ? "Saving..." : "Save Changes"}
+                          </Button>
+                          <Button 
+                            onClick={handleEditToggle} 
+                            variant="secondary"
+                            disabled={isSaving}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Gender</p>
-                        <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white capitalize">{profile?.gender || "Not specified"}</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Full Name</p>
+                          <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.fullName || "John Doe"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Gender</p>
+                          <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white capitalize">{profile?.gender || "Not specified"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Email Address</p>
+                          <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.email || "john@example.com"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Phone Number</p>
+                          <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.phoneNumber || "+123 456 7890"}</p>
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Passport Number</p>
+                          <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.passportNumber || "Not provided"}</p>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Email Address</p>
-                        <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.email || "john@example.com"}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-widest font-bold text-[color:var(--color-navy)]/70 dark:text-slate-400">Phone Number</p>
-                        <p className="font-bold text-lg text-[color:var(--color-navy)] dark:text-white">{profile?.phoneNumber || "+123 456 7890"}</p>
-                      </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
