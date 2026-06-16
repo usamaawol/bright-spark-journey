@@ -1,7 +1,8 @@
 import * as React from "react";
 import { onAuthStateChanged, User, updateEmail, updateProfile as updateFirebaseProfile, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export interface UserProfile {
   uid: string;
@@ -11,6 +12,7 @@ export interface UserProfile {
   gender?: string;
   age?: string;
   passportNumber?: string;
+  photoURL?: string;
   role: "student" | "admin";
   currentLevel: string;
   attendance: number;
@@ -76,6 +78,11 @@ export function useAuth() {
         await updateEmail(user, data.email);
       }
 
+      // Update Firebase Auth photoURL if changed
+      if (data.photoURL && user.photoURL !== data.photoURL) {
+        await updateFirebaseProfile(user, { photoURL: data.photoURL });
+      }
+
       return true;
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -83,5 +90,32 @@ export function useAuth() {
     }
   };
 
-  return { user, profile, loading, updateUserProfile };
+  const uploadProfilePicture = async (file: File): Promise<string> => {
+    if (!user) throw new Error("User not authenticated");
+
+    const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // Optional: Track upload progress
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload is ${progress}% done`);
+        },
+        (error) => {
+          reject(error);
+        },
+        async () => {
+          // Upload completed successfully, get the download URL
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          await updateUserProfile({ photoURL: downloadURL });
+          resolve(downloadURL);
+        }
+      );
+    });
+  };
+
+  return { user, profile, loading, updateUserProfile, uploadProfilePicture };
 }

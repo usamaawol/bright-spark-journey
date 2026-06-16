@@ -72,9 +72,17 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[color:var(--color-navy)]/10 dark:border-slate-700 hover:bg-[color:var(--color-navy)]/5 dark:hover:bg-slate-700 transition-all">
-                  <div className="size-7 rounded-full bg-[color:var(--color-spark)] text-white grid place-items-center text-xs font-bold">
-                    {profile?.fullName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
-                  </div>
+                  {profile?.photoURL ? (
+                    <img 
+                      src={profile.photoURL} 
+                      alt="Profile" 
+                      className="size-7 rounded-full object-cover border border-[color:var(--color-navy)]/10 dark:border-slate-700"
+                    />
+                  ) : (
+                    <div className="size-7 rounded-full bg-[color:var(--color-spark)] text-white grid place-items-center text-xs font-bold">
+                      {profile?.fullName?.charAt(0) || user.email?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <span className="text-sm font-bold text-[color:var(--color-navy)] dark:text-white max-w-[100px] truncate">
                     {profile?.fullName || "Student"}
                   </span>

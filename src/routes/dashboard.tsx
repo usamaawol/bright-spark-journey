@@ -44,10 +44,11 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardComponent() {
-  const { user, profile, loading, updateUserProfile } = useAuth();
+  const { user, profile, loading, updateUserProfile, uploadProfilePicture } = useAuth();
   const [activeTab, setActiveTab] = React.useState("overview");
   const [isEditing, setIsEditing] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
   const [formData, setFormData] = React.useState({
     fullName: "",
     email: "",
@@ -55,6 +56,7 @@ function DashboardComponent() {
     gender: "",
     passportNumber: ""
   });
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (profile) {
@@ -87,6 +89,25 @@ function DashboardComponent() {
       toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await handleUpload(file);
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    setIsUploading(true);
+    try {
+      await uploadProfilePicture(file);
+      toast.success("Profile picture updated successfully!");
+    } catch (error) {
+      toast.error("Failed to upload profile picture.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -372,10 +393,39 @@ function DashboardComponent() {
             >
               <Card className="md:col-span-1 border-none shadow-sm dark:bg-slate-800 h-fit">
                 <CardContent className="p-6 flex flex-col items-center">
-                  <div className="size-32 rounded-full bg-gradient-to-tr from-[color:var(--color-navy)] to-[color:var(--color-spark)] p-1 mb-5">
-                    <div className="size-full rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-4xl font-black text-[color:var(--color-navy)] dark:text-white border-4 border-white dark:border-slate-700 shadow-inner">
-                      {profile?.fullName?.charAt(0) || "S"}
+                  <div className="relative group mb-5">
+                    <div className="size-32 rounded-full bg-gradient-to-tr from-[color:var(--color-navy)] to-[color:var(--color-spark)] p-1">
+                      {profile?.photoURL ? (
+                        <img 
+                          src={profile.photoURL} 
+                          alt="Profile" 
+                          className="size-full rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-inner"
+                        />
+                      ) : (
+                        <div className="size-full rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-4xl font-black text-[color:var(--color-navy)] dark:text-white border-4 border-white dark:border-slate-700 shadow-inner">
+                          {profile?.fullName?.charAt(0) || "S"}
+                        </div>
+                      )}
                     </div>
+                    <label 
+                      htmlFor="profile-picture-upload" 
+                      className="absolute bottom-0 right-0 bg-[color:var(--color-spark)] text-white p-2 rounded-full cursor-pointer hover:bg-[color:var(--color-navy)] transition-colors shadow-lg"
+                    >
+                      {isUploading ? (
+                        <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Edit3 className="size-4" />
+                      )}
+                    </label>
+                    <input 
+                      type="file" 
+                      id="profile-picture-upload" 
+                      ref={fileInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
+                    />
                   </div>
                   <h3 className="text-xl font-extrabold text-[color:var(--color-navy)] dark:text-white mb-1">{profile?.fullName || "Student Name"}</h3>
                   <Badge className="bg-[color:var(--color-spark)]/10 dark:bg-[color:var(--color-spark)]/20 text-[color:var(--color-spark)] border-none mb-5 px-3 py-1 text-sm">
