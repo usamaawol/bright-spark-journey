@@ -32,7 +32,8 @@ import {
   Award,
   Bot,
   Save,
-  Edit3
+  Edit3,
+  Users
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AITutor } from "@/components/AITutor";
@@ -157,24 +158,35 @@ function DashboardComponent() {
               </p>
             </div>
             
-            <TabsList className="bg-white/50 dark:bg-slate-800/50 p-1 rounded-xl self-start md:self-end flex flex-wrap h-auto">
-              <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
-                <LayoutDashboard size={16} />
-                Overview
-              </TabsTrigger>
-              <TabsTrigger value="courses" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
-                <BookOpen size={16} />
-                My Courses
-              </TabsTrigger>
-              <TabsTrigger value="resources" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
-                <FileText size={16} />
-                Resources
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
-                <SettingsIcon size={16} />
-                Settings
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex flex-wrap gap-3 items-center">
+              {profile?.role === "admin" && (
+                <Button 
+                  onClick={() => window.location.href = "/admin"} 
+                  className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                >
+                  <Users className="size-4" /> Admin Control Center
+                </Button>
+              )}
+
+              <TabsList className="bg-white/50 dark:bg-slate-800/50 p-1 rounded-xl self-start md:self-end flex flex-wrap h-auto">
+                <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
+                  <LayoutDashboard size={16} />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="courses" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
+                  <BookOpen size={16} />
+                  My Courses
+                </TabsTrigger>
+                <TabsTrigger value="resources" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
+                  <FileText size={16} />
+                  Resources
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="rounded-lg data-[state=active]:bg-[color:var(--color-navy)] data-[state=active]:text-white flex items-center gap-2 px-4 py-2">
+                  <SettingsIcon size={16} />
+                  Settings
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
           <TabsContent value="overview">

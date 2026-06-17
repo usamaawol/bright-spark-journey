@@ -3,6 +3,8 @@ import * as React from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 import { 
   Users, 
   MessageSquare, 
@@ -43,6 +45,29 @@ export const Route = createFileRoute("/admin")({
 
 function AdminDashboardComponent() {
   const { user, profile, loading } = useAuth();
+  const [students, setStudents] = React.useState<any[]>([]);
+  const [loadingStudents, setLoadingStudents] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "users"));
+        const studentList = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setStudents(studentList);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+
+    if (user && profile?.role === "admin") {
+      fetchStudents();
+    }
+  }, [user, profile]);
 
   if (loading) {
     return (
@@ -58,19 +83,10 @@ function AdminDashboardComponent() {
   }
 
   const analytics = [
-    { label: "Total Students", value: "124", icon: Users, color: "text-blue-500" },
-    { label: "Active Today", value: "82", icon: BarChart, color: "text-green-500" },
+    { label: "Total Students", value: students.length.toString(), icon: Users, color: "text-blue-500" },
+    { label: "Active Students", value: students.filter(s => s.role === "student").length.toString(), icon: BarChart, color: "text-green-500" },
     { label: "Academy Location", value: "Bale Robe, ET", icon: MapPin, color: "text-orange-500" },
-    { label: "Admin Email", value: "BSAcademy", icon: Mail, color: "text-purple-500" },
-  ];
-
-  const mockStudents = [
-    { id: "1", name: "Aisha R.", email: "aisha@example.com", level: "Communicator", progress: 65, status: "Active" },
-    { id: "2", name: "Marco D.", email: "marco@example.com", level: "Explorer", progress: 42, status: "Active" },
-    { id: "3", name: "Linh P.", email: "linh@example.com", level: "Beginner", progress: 12, status: "Away" },
-    { id: "4", name: "John S.", email: "john@example.com", level: "Confident Speaker", progress: 88, status: "Active" },
-    { id: "5", name: "Sarah M.", email: "sarah@example.com", level: "Communicator", progress: 55, status: "Inactive" },
-    { id: "6", name: "Sparky Academy Admin", email: "brightsparkenglishacademy@gmail.com", level: "Admin", progress: 100, status: "Active" },
+    { label: "Admin", value: profile?.fullName || "BSAcademy", icon: Mail, color: "text-purple-500" },
   ];
 
   return (
@@ -139,64 +155,77 @@ function AdminDashboardComponent() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-b-[color:var(--color-navy)]/5">
-                      <TableHead>Student</TableHead>
-                      <TableHead>Level</TableHead>
-                      <TableHead>Progress</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockStudents.map((student) => (
-                      <TableRow key={student.id} className="hover:bg-[color:var(--color-navy)]/[0.02] border-b-[color:var(--color-navy)]/5">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-full bg-[color:var(--color-spark)]/10 text-[color:var(--color-spark)] grid place-items-center text-xs font-bold">
-                              {student.name.charAt(0)}
-                            </div>
-                            <div>
-                              <div className="font-bold text-sm">{student.name}</div>
-                              <div className="text-xs text-[color:var(--color-navy)]/40">{student.email}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-[10px] uppercase font-bold border-[color:var(--color-navy)]/10">
-                            {student.level}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-1.5 bg-[color:var(--color-navy)]/5 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-[color:var(--color-spark)]" 
-                                style={{ width: `${student.progress}%` }}
-                              />
-                            </div>
-                            <span className="text-xs font-medium">{student.progress}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <div className={`size-1.5 rounded-full ${
-                              student.status === "Active" ? "bg-green-500" : 
-                              student.status === "Away" ? "bg-yellow-500" : "bg-red-400"
-                            }`} />
-                            <span className="text-xs font-medium">{student.status}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" className="size-8">
-                            <MoreVertical className="size-4" />
-                          </Button>
-                        </TableCell>
+                {loadingStudents ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="size-8 border-4 border-[color:var(--color-spark)] border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-b-[color:var(--color-navy)]/5">
+                        <TableHead>Student</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Level</TableHead>
+                        <TableHead>Progress</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student) => (
+                        <TableRow key={student.id} className="hover:bg-[color:var(--color-navy)]/[0.02] border-b-[color:var(--color-navy)]/5">
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              {student.photoURL ? (
+                                <img 
+                                  src={student.photoURL} 
+                                  alt={student.fullName}
+                                  className="size-8 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="size-8 rounded-full bg-[color:var(--color-spark)]/10 text-[color:var(--color-spark)] grid place-items-center text-xs font-bold">
+                                  {student.fullName?.charAt(0) || "S"}
+                                </div>
+                              )}
+                              <div>
+                                <div className="font-bold text-sm">{student.fullName || "Unknown Student"}</div>
+                                <div className="text-xs text-[color:var(--color-navy)]/40">{student.email}</div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant="outline" 
+                              className={`text-[10px] uppercase font-bold border-[color:var(--color-navy)]/10 ${student.role === "admin" ? "text-red-600 border-red-200" : ""}`}
+                            >
+                              {student.role}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px] uppercase font-bold border-[color:var(--color-navy)]/10">
+                              {student.currentLevel}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 h-1.5 bg-[color:var(--color-navy)]/5 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-[color:var(--color-spark)]" 
+                                  style={{ width: `${student.progress || 0}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium">{student.progress || 0}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" className="size-8">
+                              <MoreVertical className="size-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
