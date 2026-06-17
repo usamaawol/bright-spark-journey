@@ -24,7 +24,7 @@ interface Message {
 
 const LESSONS: Lesson[] = ["Pronunciation", "Grammar", "Vocabulary", "Daily Communication", "Idioms"];
 
-// Enhanced AI responses by lesson
+// Super friendly AI responses like talking to a friend!
 const getAIResponse = (
   message: string,
   level: Level,
@@ -35,33 +35,33 @@ const getAIResponse = (
 ): Message & { nextQuestion?: string } => {
   const lowerMsg = message.toLowerCase();
   
-  // Exam mode logic
+  // Exam mode logic but more friendly
   if (mode === "Exam") {
     const questions = {
       Pronunciation: [
-        "Please pronounce this word: THOROUGHLY. After you try, I'll correct you.",
-        "Great! Now pronounce this phrase: RED LORRY, YELLOW LORRY.",
-        "Excellent! One last word: SCHEDULE."
+        "Let's practice! Can you say this word: 'HELLO'? 😊",
+        "Nice! Now try this phrase: 'HOW ARE YOU TODAY?'",
+        "Great! One more: 'NICE TO MEET YOU!' 🎉"
       ],
       Grammar: [
-        "Choose the correct option: I ___ (go / goes / went) to school yesterday.",
-        "Correct! Next question: She ___ (study / studies / is studying) every day.",
-        "Perfect! Fill in the blank: They ___ (play / playing / played) football now."
+        "Let's try! Complete this sentence: I ___ (eat / eats) apples every day.",
+        "Perfect! Next one: She ___ (like / likes) pizza.",
+        "Excellent! Try this: We ___ (is / are) friends!"
       ],
       Vocabulary: [
-        "What is the opposite of 'HAPPY'?",
-        "Good! What word means 'very large'?",
-        "Excellent! What is a synonym for 'BEAUTIFUL'?"
+        "What's this? 🍎 (A) Apple (B) Banana",
+        "Cool! What's the opposite of 'big'? (A) Small (B) Tall",
+        "Awesome! What do we drink? (A) Water (B) Bread"
       ],
       "Daily Communication": [
-        "How would you greet someone in the morning? Please write a short sentence.",
-        "Perfect! How do you politely ask for directions?",
-        "Great! What do you say when you want to apologize?"
+        "What do you say when you wake up? (A) Good morning! (B) Good night!",
+        "Nice! What do you say when you're sorry? (A) Thank you! (B) I'm sorry!",
+        "Great! What do you say when someone helps you? (A) Please! (B) Thank you!"
       ],
       Idioms: [
-        "What does 'Break a leg' mean? Is it: A) Good luck, B) Get angry, C) Feel sad?",
-        "Correct! What does 'Piece of cake' mean?",
-        "Excellent! 'Cost an arm and a leg' means: A) Very expensive, B) Very cheap, C) Very big?"
+        "What does 'Break a leg' mean? It means... (A) Good luck! (B) Ouch, my leg!",
+        "Cool! What does 'Piece of cake' mean? (A) Very easy! (B) Yummy cake!",
+        "Nice! 'I'm over the moon' means... (A) I'm very happy! (B) I'm on the moon!"
       ]
     };
 
@@ -70,7 +70,7 @@ const getAIResponse = (
     if (questionIndex === undefined || questionIndex === 0) {
       return {
         role: "assistant",
-        content: `🎯 ${lesson} Exam Started! Let's begin with question 1:\n\n${selectedQuestions[0]}`,
+        content: `Hey! Let's do a quick fun practice for ${lesson}! 🚀\n\n${selectedQuestions[0]}`,
         timestamp: new Date(),
         nextQuestion: selectedQuestions[0]
       };
@@ -82,53 +82,61 @@ const getAIResponse = (
     if (nextQIndex >= selectedQuestions.length) {
       return {
         role: "assistant",
-        content: `🎉 Exam Complete! You did great! You've practiced your ${lesson} skills. Would you like to try another exam or go back to chat?`,
+        content: `Wow, you did AWESOME! 🌟 You're getting so good at ${lesson}! Want to chat more or try another practice?`,
         timestamp: new Date()
       };
     }
 
     return {
       role: "assistant",
-      content: `✅ Good answer! Here's question ${nextQIndex + 1}:\n\n${selectedQuestions[nextQIndex]}`,
+      content: `Perfect! You're doing great! Here's the next one:\n\n${selectedQuestions[nextQIndex]}`,
       timestamp: new Date(),
       nextQuestion: selectedQuestions[nextQIndex]
     };
   }
 
-  // Normal chat mode
+  // Super friendly, simple chat mode!
   let responseText = "";
 
   // Lesson specific responses
   if (lesson === "Pronunciation") {
     if (lowerMsg.includes("how") && lowerMsg.includes("pronounce")) {
-      responseText = `Great question! To pronounce words clearly, focus on each sound. Could you tell me which specific word you'd like to practice?`;
+      responseText = `Ooh, great question! What word do you want to practice saying? I'll say it slowly first! 😊`;
     } else {
-      responseText = `Pronunciation practice! Let's work on speaking clearly. Try saying a sentence and I'll give you tips! Would you like to practice any specific sounds?`;
+      responseText = `Okay, pronunciation practice time! 🎤 Try saying a sentence, and I'll help you say it perfectly! What do you want to say?`;
     }
   } else if (lesson === "Grammar") {
     if (lowerMsg.includes("what is") || lowerMsg.includes("difference between")) {
-      responseText = `Perfect grammar question! Let's break this down simply. Can you give me an example sentence to work with?`;
+      responseText = `Let's figure that out together! Can you give me a small example so I can explain it simply?`;
     } else {
-      responseText = `Grammar time! Ask me any grammar question or try to make a sentence and I'll check it for you. What would you like to practice?`;
+      responseText = `Grammar time! 📚 Try making a sentence about your day, and I'll check it gently! What did you do today?`;
     }
   } else if (lesson === "Vocabulary") {
-    responseText = `Vocabulary building! What topic are you interested in today? We can talk about family, food, school, travel, or any other topic you like.`;
+    responseText = `Yay, new words! 📝 What do you want to talk about? Food? Hobbies? School? Let's learn fun words together!`;
   } else if (lesson === "Daily Communication") {
-    responseText = `Everyday English! Let's practice real conversations. What situation would you like to role-play? Greeting someone? Shopping? Ordering food?`;
+    responseText = `Let's chat like real life! 😃 What do you want to practice? Greeting a friend? Ordering juice? Let's do it!`;
   } else if (lesson === "Idioms") {
-    responseText = `Idioms make English fun! Would you like to learn some common idioms today or practice using them in sentences?`;
+    responseText = `Idioms are so fun! 🎉 Want to learn some cool ones, or practice using them in silly sentences?`;
   } else {
-    // General chat
+    // General chat - super friendly!
     if (lowerMsg.includes("academy") || lowerMsg.includes("bright spark")) {
-      responseText = "Bright Spark English Academy is located in Bale Robe Zone, Oromia Region, Ethiopia. We help students go from Beginner to Confident Speaker through an immersive, speech-first method!";
-    } else if (lowerMsg.includes("hello") || lowerMsg.includes("hi")) {
+      responseText = "Bright Spark Academy is such a cool place! We learn English by speaking a lot, making mistakes, and having fun! 😊";
+    } else if (lowerMsg.includes("hello") || lowerMsg.includes("hi") || lowerMsg.includes("hey")) {
       responseText = level === "Beginner" 
-        ? `Hello! I'm Sparky. I'm happy to help you learn English. How are you today?` 
+        ? `Hi there! I'm Sparky! I'm so excited to practice English with you! How are you feeling today? Happy? Tired? 😊` 
         : level === "Intermediate" 
-          ? `Hi there! Great to talk with you. How's your English learning going this week?` 
-          : `Hey! Let's dive right into a great English conversation. What shall we talk about today?`;
+          ? `Hey, nice to chat! How's your English going this week? Is anything tricky or easy for you?` 
+          : `Hey! Let's have a great English conversation! What's something fun you did lately?`;
+    } else if (lowerMsg.includes("how are you")) {
+      responseText = "I'm doing great, thanks for asking! How about you? What's your day been like? 😄";
+    } else if (lowerMsg.includes("good") || lowerMsg.includes("great") || lowerMsg.includes("nice")) {
+      responseText = "That's wonderful to hear! 🌟 Tell me more about what made it good!";
+    } else if (lowerMsg.includes("sad") || lowerMsg.includes("bad") || lowerMsg.includes("tired")) {
+      responseText = "Aww, I'm sorry you're feeling that way. But you know what? Practicing English can be a fun distraction! Wanna chat about something simple to cheer you up? 💛";
+    } else if (lowerMsg.includes("thank")) {
+      responseText = "You're very welcome! Anytime! 😊 What should we talk about next?";
     } else {
-      responseText = `That's interesting! Tell me more about that.`;
+      responseText = "Wow, that's so interesting! Tell me more! 😃 I love hearing about your life!";
     }
   }
 
@@ -157,10 +165,21 @@ export function AITutor({ userLevel = "Beginner", studentName = "Student" }: { u
   const [isMinimized, setIsMinimized] = React.useState(false);
   const [isListening, setIsListening] = React.useState(false);
   const [isSpeaking, setIsSpeaking] = React.useState(false);
-  const [autoSpeak, setAutoSpeak] = React.useState(false); // Default off - user controls
+  const [autoSpeak, setAutoSpeak] = React.useState(true); // Auto-speak on by default for students
   
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const recognitionRef = React.useRef<any>(null);
+
+  // Preload voices for better speech
+  React.useEffect(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        // Voices are loaded
+      };
+      // Trigger voice load
+      window.speechSynthesis.getVoices();
+    }
+  }, []);
 
   React.useEffect(() => {
     // Initialize Web Speech API for STT
@@ -205,7 +224,21 @@ export function AITutor({ userLevel = "Beginner", studentName = "Student" }: { u
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
-    utterance.rate = level === "Advanced" ? 1.0 : 0.85;
+    utterance.rate = 0.9; // Natural, not too fast
+    utterance.pitch = 1.1; // Friendly, warm tone
+    utterance.volume = 1.0;
+    
+    // Try to use a native English voice
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find(voice => 
+      voice.lang === 'en-US' && 
+      voice.name.toLowerCase().includes('female') &&
+      voice.name.toLowerCase().includes('google')
+    ) || voices.find(voice => voice.lang === 'en-US') || voices[0];
+    
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
     
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
