@@ -75,7 +75,14 @@ function Index() {
       try {
         const snapshot = await getDocs(collection(db, "announcements"));
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAnnouncements(data.filter(announcement => announcement.visible));
+        // Show only visible, sort by newest first, take top 3 for home page
+        setAnnouncements(
+          data.filter(a => a.visible).sort((a, b) => {
+            const timeA = a.createdAt?.toMillis?.() || 0;
+            const timeB = b.createdAt?.toMillis?.() || 0;
+            return timeB - timeA;
+          }).slice(0, 3)
+        );
       } catch (error) {
         console.error("Error fetching announcements:", error);
       } finally {
@@ -91,23 +98,40 @@ function Index() {
 
       {/* Announcements */}
       {!loadingAnnouncements && announcements.length > 0 && (
-        <section className="py-8 px-6 md:px-20 bg-[color:var(--color-spark)]/10 border-b border-[color:var(--color-spark)]/20">
+        <section className="py-12 px-6 md:px-20 bg-[color:var(--color-spark)]/10 border-b border-[color:var(--color-spark)]/20">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-4 mb-4">
-              <Megaphone className="size-6 text-[color:var(--color-spark)]" />
-              <h2 className="font-[family-name:var(--font-display)] font-bold text-xl md:text-2xl text-[color:var(--color-navy)]">
-                Latest Announcements
-              </h2>
+            <div className="flex items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <Megaphone className="size-7 text-[color:var(--color-spark)]" />
+                <h2 className="font-[family-name:var(--font-display)] font-bold text-2xl md:text-3xl text-[color:var(--color-navy)] dark:text-white">
+                  Latest Announcements
+                </h2>
+              </div>
+              <Link 
+                to="/announcements" 
+                className="text-[color:var(--color-spark)] font-[family-name:var(--font-display)] font-bold hover:underline flex items-center gap-2"
+              >
+                View All →
+              </Link>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {announcements.map(announcement => (
-                <div key={announcement.id} className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-[color:var(--color-navy)]/10 dark:border-slate-700 shadow-sm">
-                  <h3 className="font-[family-name:var(--font-display)] font-bold text-[color:var(--color-navy)] dark:text-white mb-2">
+                <div key={announcement.id} className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-[color:var(--color-navy)]/10 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                  <h3 className="font-[family-name:var(--font-display)] font-bold text-[color:var(--color-navy)] dark:text-white mb-3">
                     {announcement.title}
                   </h3>
-                  <p className="text-[color:var(--color-navy)]/70 dark:text-slate-300">
+                  <p className="text-[color:var(--color-navy)]/70 dark:text-slate-300 mb-4">
                     {announcement.content}
                   </p>
+                  {announcement.createdAt && (
+                    <p className="text-xs text-[color:var(--color-navy)]/40 dark:text-slate-500 uppercase tracking-wider">
+                      {new Date(announcement.createdAt.toMillis()).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

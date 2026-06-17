@@ -18,6 +18,7 @@ import { toast } from "sonner";
 const navItems = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
+  { to: "/announcements", label: "Announcements" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
