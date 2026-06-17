@@ -55,7 +55,7 @@ function Contact() {
     setLoading(true);
     
     try {
-      await addDoc(collection(db, "contacts"), {
+      await addDoc(collection(db, "messages"), {
         ...result.data,
         createdAt: serverTimestamp(),
         status: "new",

@@ -4,12 +4,14 @@ import * as React from "react";
 import {
   MessageCircle, Lock, Trophy, Sparkles, HeartHandshake, Globe2,
   Mic, BookOpen, GraduationCap, Calendar, Headphones, Users, BarChart3, Languages,
-  ArrowRight, Star, Quote, CheckCircle2,
+  ArrowRight, Star, Quote, CheckCircle2, Megaphone,
 } from "lucide-react";
 import heroImg from "@/assets/hero-students.jpg";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { motion } from "framer-motion";
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,9 +67,53 @@ const testimonials = [
 ];
 
 function Index() {
+  const [announcements, setAnnouncements] = React.useState<any[]>([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, "announcements"));
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAnnouncements(data.filter(announcement => announcement.visible));
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+      } finally {
+        setLoadingAnnouncements(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
     <div className="font-[family-name:var(--font-body)] bg-background text-foreground selection:bg-[color:var(--color-spark)]/20">
       <Header />
+
+      {/* Announcements */}
+      {!loadingAnnouncements && announcements.length > 0 && (
+        <section className="py-8 px-6 md:px-20 bg-[color:var(--color-spark)]/10 border-b border-[color:var(--color-spark)]/20">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4 mb-4">
+              <Megaphone className="size-6 text-[color:var(--color-spark)]" />
+              <h2 className="font-[family-name:var(--font-display)] font-bold text-xl md:text-2xl text-[color:var(--color-navy)]">
+                Latest Announcements
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {announcements.map(announcement => (
+                <div key={announcement.id} className="bg-white dark:bg-slate-800 p-6 rounded-lg border border-[color:var(--color-navy)]/10 dark:border-slate-700 shadow-sm">
+                  <h3 className="font-[family-name:var(--font-display)] font-bold text-[color:var(--color-navy)] dark:text-white mb-2">
+                    {announcement.title}
+                  </h3>
+                  <p className="text-[color:var(--color-navy)]/70 dark:text-slate-300">
+                    {announcement.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Hero */}
       <section className="flex flex-col md:flex-row min-h-[90vh] border-b border-border overflow-hidden">
