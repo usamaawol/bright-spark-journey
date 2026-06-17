@@ -25,15 +25,29 @@ function LoginComponent() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
+    console.log("Login started for:", email);
+    
     try {
+      console.log("Calling signInWithEmailAndPassword...");
       await signInWithEmailAndPassword(auth, email, password);
+      console.log("Login successful");
       toast.success("Welcome back!");
+      console.log("Navigating to dashboard...");
       navigate({ to: "/dashboard" });
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Failed to login. Please check your credentials.");
+      let errorMessage = "Failed to login. Please check your credentials.";
+      if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password.";
+      }
+      toast.error(errorMessage);
     } finally {
+      console.log("Login process finished, setting loading to false");
       setLoading(false);
     }
   };

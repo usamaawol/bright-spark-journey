@@ -35,13 +35,22 @@ function RegisterComponent() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     setLoading(true);
+    console.log("Registration started for:", email);
+    
     try {
+      console.log("Calling createUserWithEmailAndPassword...");
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log("User created successfully:", user.uid);
 
       // Create user profile in Firestore
-      await setDoc(doc(db, "users", user.uid), {
+      console.log("Creating user profile in Firestore...");
+      
+      // Add a safety timeout for Firestore operation
+      const profilePromise = setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         fullName,
         email,
@@ -58,12 +67,25 @@ function RegisterComponent() {
         joinedAt: serverTimestamp(),
       });
 
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Firestore operation timed out. Please check your connection or Firebase settings.")), 15000)
+      );
+
+      await Promise.race([profilePromise, timeoutPromise]);
+      console.log("Firestore profile created successfully");
+
       toast.success("Account created successfully!");
+      console.log("Navigating to dashboard...");
       navigate({ to: "/dashboard" });
     } catch (error: any) {
       console.error("Registration error:", error);
-      toast.error(error.message || "Failed to register");
+      let errorMessage = error.message || "Failed to register";
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "This email is already registered. Please try logging in instead.";
+      }
+      toast.error(errorMessage);
     } finally {
+      console.log("Registration process finished, setting loading to false");
       setLoading(false);
     }
   };

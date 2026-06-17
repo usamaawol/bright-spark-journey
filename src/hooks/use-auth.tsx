@@ -30,30 +30,55 @@ export function useAuth() {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    console.log("useAuth: Initializing onAuthStateChanged");
+    
+    // Set a safety timeout to prevent infinite loading state
+    const loadingTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn("useAuth: Loading timeout reached, forcing loading to false");
+        setLoading(false);
+      }
+    }, 10000); // 10 seconds safety timeout
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("useAuth: Auth state changed, user:", firebaseUser?.uid);
+      clearTimeout(loadingTimeout);
       setUser(firebaseUser);
       
       if (firebaseUser) {
         try {
+          console.log("useAuth: Fetching profile for:", firebaseUser.uid);
           const docRef = doc(db, "users", firebaseUser.uid);
-          const docSnap = await getDoc(docRef);
           
-          if (docSnap.exists()) {
+          // Add timeout to getDoc as well
+          const docPromise = getDoc(docRef);
+          const docTimeoutPromise = new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error("Profile fetch timed out")), 8000)
+          );
+          
+          const docSnap = await Promise.race([docPromise, docTimeoutPromise]) as any;
+          
+          if (docSnap && docSnap.exists()) {
+            console.log("useAuth: Profile found");
             setProfile(docSnap.data() as UserProfile);
           } else {
-            console.warn("No user profile found in Firestore");
+            console.warn("useAuth: No user profile found in Firestore");
           }
         } catch (error) {
-          console.error("Error fetching user profile:", error);
+          console.error("useAuth: Error fetching user profile:", error);
         }
       } else {
         setProfile(null);
       }
       
+      console.log("useAuth: Setting loading to false");
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const updateUserProfile = async (data: Partial<UserProfile>) => {
